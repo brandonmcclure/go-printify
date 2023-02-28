@@ -31,6 +31,15 @@ type Order struct {
 	FulfilledAt              *time.Time         `json:"fulfilled_at,omitempty"`
 }
 
+type OrderSubmission struct {
+	ExternalID               string             `json:"external_id"`
+	Label                    string             `json:"label,omitempty"`
+	LineItems                []*LineItem        `json:"line_items"`
+	ShippingMethod           int                `json:"shipping_method"`
+	SendShippingNotification bool               `json:"send_shipping_notification"`
+	AddressTo                *map[string]string `json:"address_to"`
+}
+
 type LineItem struct {
 	Id                 *int               `json:"id,omitempty"`
 	VariantId          *int               `json:"variant_id,omitempty"`
@@ -122,7 +131,7 @@ func (c *Client) GetOrderDetails(shopId, orderId int) (*Order, error) {
 /*
 Submit an order
 */
-func (c *Client) SubmitOrder(shopId int, order *Order) error {
+func (c *Client) SubmitOrder(shopId int, order *OrderSubmission) error {
 	path := fmt.Sprintf(getShopOrdersPath, shopId)
 	req, err := c.newRequest(http.MethodPost, path, order)
 	if err != nil {
