@@ -1,3 +1,3 @@
-module github.com/omrikiei/go-printify
+module github.com/ericdbishop/go-printify
 
 go 1.12
