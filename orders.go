@@ -16,15 +16,15 @@ const (
 
 type Order struct {
 	Id                       *int           `json:"id,omitempty"`
-	AddressTo                *AddressTo     `json:"address_to,omitempty"`
 	LineItems                []*LineItem    `json:"line_items"`
+	AddressTo                *AddressTo     `json:"address_to,omitempty"`
 	Metadata                 *OrderMetadata `json:"metadata,omitempty"`
 	TotalPrice               *float32       `json:"total_price,omitempty"`
 	TotalShipping            *float32       `json:"total_shipping,omitempty"`
 	TotalTax                 *float32       `json:"total_tax,omitempty"`
 	Status                   *string        `json:"status,omitempty"`
-	ShippingMethod           int            `json:"shipping_method"`
-	SendShippingNotification *bool          `json:"send_shipping_notification"`
+	ShippingMethod           int            `json:"shipping_method,omitempty"`
+	SendShippingNotification *bool          `json:"send_shipping_notification,omitempty"`
 	Shipments                []*Shipment    `json:"shipments,omitempty"`
 	CreatedAt                *time.Time     `json:"created_at,omitempty"`
 	SentToProductionAt       *time.Time     `json:"sent_to_production_at,omitempty"`
