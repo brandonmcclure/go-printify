@@ -32,11 +32,11 @@ type Order struct {
 }
 
 type OrderSubmission struct {
-	ExternalID               string      `json:"external_id"`
+	ExternalID               string      `json:"external_id,omitempty"`
 	Label                    string      `json:"label,omitempty"`
 	LineItems                []*LineItem `json:"line_items"`
-	ShippingMethod           int         `json:"shipping_method"`
-	SendShippingNotification bool        `json:"send_shipping_notification"`
+	ShippingMethod           int         `json:"shipping_method,omitempty"`
+	SendShippingNotification *bool       `json:"send_shipping_notification,omitempty"`
 	AddressTo                *AddressTo  `json:"address_to"`
 }
 
@@ -171,7 +171,7 @@ func (c *Client) SendOrderToProduction(shopId, orderId int) (*Order, error) {
 /*
 Calculate the shipping cost of an order
 */
-func (c *Client) CalculateShippingCosts(shopId int, order *Order) (*ShippingCost, error) {
+func (c *Client) CalculateShippingCosts(shopId int, order *OrderSubmission) (*ShippingCost, error) {
 	path := fmt.Sprintf(getShippingCostsPath, shopId)
 	req, err := c.newRequest(http.MethodPost, path, order)
 	if err != nil {
