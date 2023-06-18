@@ -1,4 +1,4 @@
-module github.com/ericdbishop/go-printify
+module github.com/grantok/go-printify
 
 go 1.19
 
