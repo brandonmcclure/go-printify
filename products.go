@@ -15,6 +15,21 @@ const (
 	unpublishPath      = "shops/%d/products/%d/unpublish.json"
 )
 
+type ProductsResponse struct {
+	CurrentPage  int       `json:"current_page"`
+	Data         []Product `json:"data"`
+	FirstPageUrl string    `json:"first_page_url"`
+	LastPageUrl  string    `json:"last_page_url"`
+	NextPageUrl  string    `json:"next_page_url"`
+	From         int       `json:"from"`
+	LastPage     int       `json:"last_page"`
+	Path         string    `json:"path"`
+	PerPage      int       `json:"per_page"`
+	PrevPageUrl  string    `json:"prev_page_url"`
+	To           int       `json:"to"`
+	Total        int       `json:"total"`
+}
+
 type Product struct {
 	Id                     *int                     `json:"id,omitempty"`
 	Title                  string                   `json:"title"`
@@ -58,7 +73,7 @@ type ProductMockUpImage struct {
 	IsDefault  bool   `json:"is_default"`
 }
 
-type ProducePlaceholder struct {
+type ProductPlaceholder struct {
 	Position string         `json:"position"`
 	Images   []ProductImage `json:"images"`
 }
@@ -77,7 +92,7 @@ type ProductImage struct {
 
 type PrintArea struct {
 	VariantIds   []int                `json:"variant_ids"`
-	Placeholders []ProducePlaceholder `json:"placeholders"`
+	Placeholders []ProductPlaceholder `json:"placeholders"`
 }
 
 type PrintDetails struct {
@@ -100,18 +115,42 @@ type External struct {
 /*
 Retrieve a list of products
 */
-func (c *Client) GetProducts(shopId int, page *int) ([]*Product, error) {
+func (c *Client) GetAllProducts(shopId int) ([]Product, error) {
+
+	var allProducts []Product
+
+	page := 1
+	for {
+		productResults, err := c.GetProducts(shopId, &page)
+		if err != nil {
+			return nil, err
+		}
+
+		allProducts = append(allProducts, productResults.Data...)
+
+		if productResults.NextPageUrl == "" {
+			break
+		}
+
+		page++
+
+	}
+
+	return allProducts, nil
+}
+
+func (c *Client) GetProducts(shopId int, page *int) (*ProductsResponse, error) {
 	path := fmt.Sprintf(productsPath, shopId)
 	if page != nil {
-		path = fmt.Sprintf("%s?page=%d", path, &page)
+		path = fmt.Sprintf("%s?page=%d", path, *page)
 	}
 	req, err := c.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
-	products := make([]*Product, 0)
+	products := ProductsResponse{}
 	_, err = c.do(req, &products)
-	return products, err
+	return &products, err
 }
 
 /*
