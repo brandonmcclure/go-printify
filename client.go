@@ -44,8 +44,11 @@ func NewClient(apiKey string) *Client {
 	}
 }
 
-func (c *Client) newRequest(method, path string, body interface{}) (*http.Request, error) {
+func (c *Client) newRequest(method, path string, query string, body interface{}) (*http.Request, error) {
 	rel := &url.URL{Path: fmt.Sprintf("%s/%s", c.ApiVersion, path)}
+	if query != "" {
+		rel.RawQuery = query
+	}
 	u := c.BaseURL.ResolveReference(rel)
 	var buf io.ReadWriter
 	if body != nil {
@@ -77,9 +80,9 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 		_ = resp.Body.Close()
 	}()
 	if resp.StatusCode >= 400 {
-		// return resp, errors.New(fmt.Sprintf("%d", resp.StatusCode))
 		return resp, fmt.Errorf(fmt.Sprintf("%d", resp.StatusCode))
 	}
+
 	err = json.NewDecoder(resp.Body).Decode(v)
 	return resp, err
 }

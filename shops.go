@@ -20,11 +20,11 @@ type Shop struct {
 Retrieve list of shops in a Printify account
 */
 func (c *Client) ListShops() ([]*Shop, error) {
-	req, err := c.newRequest(http.MethodGet, shopsPath, nil)
+	req, err := c.newRequest(http.MethodGet, shopsPath, "", nil)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(req)
+	// fmt.Println(req)
 	shopList := make([]*Shop, 0)
 	_, err = c.do(req, &shopList)
 	return shopList, err
@@ -34,7 +34,7 @@ func (c *Client) ListShops() ([]*Shop, error) {
 Disconnect a shop
 */
 func (c *Client) DeleteShop(Id int) error {
-	req, err := c.newRequest(http.MethodDelete, fmt.Sprintf(disconnectShopPath, Id), nil)
+	req, err := c.newRequest(http.MethodDelete, fmt.Sprintf(disconnectShopPath, Id), "", nil)
 	if err != nil {
 		return err
 	}

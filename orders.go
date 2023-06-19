@@ -118,7 +118,7 @@ func (c *Client) ListShopOrders(shopId int, page, limit *int, statusFilter *stri
 		path = fmt.Sprintf("%s&status=%s", path, *statusFilter)
 	}
 
-	req, err := c.newRequest(http.MethodGet, path, nil)
+	req, err := c.newRequest(http.MethodGet, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ Get order details by ID
 */
 func (c *Client) GetOrderDetails(shopId, orderId int) (*Order, error) {
 	path := fmt.Sprintf(getShopOrderPath, shopId, orderId)
-	req, err := c.newRequest(http.MethodGet, path, nil)
+	req, err := c.newRequest(http.MethodGet, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ Submit an order
 */
 func (c *Client) SubmitOrder(shopId int, order *OrderSubmission) error {
 	path := fmt.Sprintf(getShopOrdersPath, shopId)
-	req, err := c.newRequest(http.MethodPost, path, order)
+	req, err := c.newRequest(http.MethodPost, path, "", order)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ Send an existing order to production
 */
 func (c *Client) SendOrderToProduction(shopId, orderId int) (*Order, error) {
 	path := fmt.Sprintf(sendOrderToProductionPath, shopId, orderId)
-	req, err := c.newRequest(http.MethodPost, path, nil)
+	req, err := c.newRequest(http.MethodPost, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ Calculate the shipping cost of an order
 */
 func (c *Client) CalculateShippingCosts(shopId int, order *OrderSubmission) (*ShippingCost, error) {
 	path := fmt.Sprintf(getShippingCostsPath, shopId)
-	req, err := c.newRequest(http.MethodPost, path, order)
+	req, err := c.newRequest(http.MethodPost, path, "", order)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ Cancel an order
 */
 func (c *Client) CancelOrder(shopId, orderId int) (*Order, error) {
 	path := fmt.Sprintf(cancelOrderPath, shopId, orderId)
-	req, err := c.newRequest(http.MethodPost, path, nil)
+	req, err := c.newRequest(http.MethodPost, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
