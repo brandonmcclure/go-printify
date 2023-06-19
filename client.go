@@ -3,7 +3,6 @@ package go_printify
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -78,7 +77,8 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 		_ = resp.Body.Close()
 	}()
 	if resp.StatusCode >= 400 {
-		return resp, errors.New(fmt.Sprintf("%d", resp.StatusCode))
+		// return resp, errors.New(fmt.Sprintf("%d", resp.StatusCode))
+		return resp, fmt.Errorf(fmt.Sprintf("%d", resp.StatusCode))
 	}
 	err = json.NewDecoder(resp.Body).Decode(v)
 	return resp, err
