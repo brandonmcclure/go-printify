@@ -7,11 +7,11 @@ import (
 
 const (
 	productsPath       = "shops/%d/products.json"
-	productPath        = "shops/%d/products/%d.json"
-	publishProductPath = "shops/%d/products/%d/publish.json"
-	publishSuccessPath = "shops/%d/products/%d/publishing_succeeded.json"
-	publishFailedPath  = "shops/%d/products/%d/publishing_failed.json"
-	unpublishPath      = "shops/%d/products/%d/unpublish.json"
+	productPath        = "shops/%d/products/%s.json"
+	publishProductPath = "shops/%d/products/%s/publish.json"
+	publishSuccessPath = "shops/%d/products/%s/publishing_succeeded.json"
+	publishFailedPath  = "shops/%d/products/%s/publishing_failed.json"
+	unpublishPath      = "shops/%d/products/%s/unpublish.json"
 )
 
 type ProductsResponse struct {
@@ -155,7 +155,7 @@ func (c *Client) GetProducts(shopId int, page *int) (*ProductsResponse, error) {
 /*
 Retrieve a product
 */
-func (c *Client) GetProduct(shopId, productId int) (*Product, error) {
+func (c *Client) GetProduct(shopId int, productId string) (*Product, error) {
 	path := fmt.Sprintf(productPath, shopId, productId)
 	req, err := c.newRequest(http.MethodGet, path, "", nil)
 	if err != nil {
@@ -195,7 +195,7 @@ func (c *Client) UpdateProduct(shopId int, product Product) (*Product, error) {
 /*
 Delete a product
 */
-func (c *Client) DeleteProduct(shopId int, productId int) error {
+func (c *Client) DeleteProduct(shopId int, productId string) error {
 	path := fmt.Sprintf(productPath, shopId, productId)
 	req, err := c.newRequest(http.MethodDelete, path, "", nil)
 	if err != nil {
@@ -208,7 +208,7 @@ func (c *Client) DeleteProduct(shopId int, productId int) error {
 /*
 Publish a product
 */
-func (c *Client) PublishProduct(shopId, productId int, publishProperties PublishingProperties) error {
+func (c *Client) PublishProduct(shopId int, productId string, publishProperties PublishingProperties) error {
 	path := fmt.Sprintf(publishProductPath, shopId, productId)
 	req, err := c.newRequest(http.MethodPost, path, "", publishProperties)
 	if err != nil {
@@ -221,7 +221,7 @@ func (c *Client) PublishProduct(shopId, productId int, publishProperties Publish
 /*
 Set product publish status to succeeded
 */
-func (c *Client) SetProductPublishSuccess(shopId, productId int, external External) error {
+func (c *Client) SetProductPublishSuccess(shopId int, productId string, external External) error {
 	path := fmt.Sprintf(publishSuccessPath, shopId, productId)
 	req, err := c.newRequest(http.MethodPost, path, "", external)
 	if err != nil {
@@ -234,7 +234,7 @@ func (c *Client) SetProductPublishSuccess(shopId, productId int, external Extern
 /*
 Set product publish status to failed
 */
-func (c *Client) SetProductPublishFailre(shopId, productId int, reason string) error {
+func (c *Client) SetProductPublishFailre(shopId int, productId string, reason string) error {
 	path := fmt.Sprintf(publishFailedPath, shopId, productId)
 	req, err := c.newRequest(http.MethodPost, path, "", map[string]string{"reason": reason})
 	if err != nil {
@@ -247,7 +247,7 @@ func (c *Client) SetProductPublishFailre(shopId, productId int, reason string) e
 /*
 Notify that a product has been unpublished
 */
-func (c *Client) UnPublish(shopId, productId int) error {
+func (c *Client) UnPublish(shopId int, productId string) error {
 	path := fmt.Sprintf(unpublishPath, shopId, productId)
 	req, err := c.newRequest(http.MethodPost, path, "", nil)
 	if err != nil {
