@@ -80,6 +80,9 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 		_ = resp.Body.Close()
 	}()
 	if resp.StatusCode >= 400 {
+		bb, _ := io.ReadAll(resp.Body)
+		bs := string(bb)
+		fmt.Println("RESP", bs)
 		return resp, fmt.Errorf(fmt.Sprintf("%d", resp.StatusCode))
 	}
 

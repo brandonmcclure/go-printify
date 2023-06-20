@@ -2,6 +2,7 @@ package go_printify
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -46,9 +47,25 @@ type Product struct {
 	ShopId                 int                      `json:"shop_id"`
 	PrintAreas             []PrintArea              `json:"print_areas"`
 	PrintDetails           []PrintDetails           `json:"print_details"`
-	External               External                 `json:"external"`
+	External               *External                `json:"external,omitempty"`
 	IsLocked               bool                     `json:"is_locked"`
-	SalesChannelProperties []string                 `json:"sales_channel_properties"`
+	SalesChannelProperties []string                 `json:"sales_channel_properties,omitempty"`
+}
+
+type ProductCreation struct {
+	Title           string                   `json:"title"`
+	Description     string                   `json:"description"`
+	Variants        []ProductCreationVariant `json:"variants"`
+	BlueprintId     int                      `json:"blueprint_id"`
+	PrintProviderId int                      `json:"print_provider_id"`
+	PrintAreas      []PrintArea              `json:"print_areas"`
+}
+
+type ProductCreationVariant struct {
+	Id        int     `json:"id"`
+	Price     float32 `json:"price"`
+	IsEnabled bool    `json:"is_enabled"`
+	IsDefault bool    `json:"is_default"`
 }
 
 type ProductVariant struct {
@@ -70,6 +87,7 @@ type ProductMockUpImage struct {
 	VariantIds []int  `json:"variant_ids"`
 	Position   string `json:"position"`
 	IsDefault  bool   `json:"is_default"`
+	IsPublish  bool   `json:"is_selected_for_publishing"`
 }
 
 type ProductPlaceholder struct {
@@ -169,26 +187,32 @@ func (c *Client) GetProduct(shopId int, productId string) (*Product, error) {
 /*
 Create a new product
 */
-func (c *Client) CreateProduct(product Product) error {
-	req, err := c.newRequest(http.MethodPost, productsPath, "", product)
+func (c *Client) CreateProduct(shopId int, product ProductCreation) (*Product, error) {
+	path := fmt.Sprintf(productsPath, shopId)
+	req, err := c.newRequest(http.MethodPost, path, "", product)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.do(req, product)
-	return err
+	respProd := &Product{}
+	_, err = c.do(req, respProd)
+	return respProd, err
 }
 
 /*
 Update a product
 */
-func (c *Client) UpdateProduct(shopId int, product Product) (*Product, error) {
+func (c *Client) UpdateProduct(shopId int, product *Product) (*Product, error) {
 	path := fmt.Sprintf(productPath, shopId, product.Id)
 	req, err := c.newRequest(http.MethodPut, path, "", product)
 	if err != nil {
 		return nil, err
 	}
 	updatedProduct := &Product{}
-	_, err = c.do(req, updatedProduct)
+	resp, err := c.do(req, updatedProduct)
+	if err != nil {
+		bb, _ := io.ReadAll(resp.Body)
+		fmt.Println("RESP", string(bb))
+	}
 	return updatedProduct, err
 }
 
