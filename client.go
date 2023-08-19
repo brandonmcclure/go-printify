@@ -12,7 +12,7 @@ import (
 
 const (
 	contentType = "application/json;charset=utf-8"
-	baseURL     = "api.printify.com"
+	baseURL     = "api.printify.com/v1"
 	scheme      = "https"
 )
 
