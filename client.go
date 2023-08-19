@@ -12,7 +12,7 @@ import (
 
 const (
 	contentType = "application/json;charset=utf-8"
-	baseURL     = "api.printify.com/v1"
+	baseURL     = "api.printify.com"
 	scheme      = "https"
 )
 
@@ -37,6 +37,7 @@ func NewClient(apiKey string) *Client {
 			Scheme: scheme,
 			Host:   baseURL,
 		},
+		ApiVersion: "v1",
 		UserAgent:  "go-printify v1.0",
 		httpClient: http.DefaultClient,
 		apiKey:     apiKey,
