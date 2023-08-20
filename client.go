@@ -3,7 +3,6 @@ package go_printify
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,6 +12,7 @@ import (
 const (
 	contentType = "application/json;charset=utf-8"
 	baseURL     = "api.printify.com"
+	apiVersion  = "v1"
 	scheme      = "https"
 )
 
@@ -37,14 +37,18 @@ func NewClient(apiKey string) *Client {
 			Scheme: scheme,
 			Host:   baseURL,
 		},
+		ApiVersion: apiVersion,
 		UserAgent:  "go-printify v1.0",
 		httpClient: http.DefaultClient,
 		apiKey:     apiKey,
 	}
 }
 
-func (c *Client) newRequest(method, path string, body interface{}) (*http.Request, error) {
+func (c *Client) newRequest(method, path string, query string, body interface{}) (*http.Request, error) {
 	rel := &url.URL{Path: fmt.Sprintf("%s/%s", c.ApiVersion, path)}
+	if query != "" {
+		rel.RawQuery = query
+	}
 	u := c.BaseURL.ResolveReference(rel)
 	var buf io.ReadWriter
 	if body != nil {
@@ -76,8 +80,12 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 		_ = resp.Body.Close()
 	}()
 	if resp.StatusCode >= 400 {
-		return resp, errors.New(fmt.Sprintf("%d", resp.StatusCode))
+		bb, _ := io.ReadAll(resp.Body)
+		bs := string(bb)
+		fmt.Println("RESP", bs)
+		return resp, fmt.Errorf(fmt.Sprintf("%d", resp.StatusCode))
 	}
+
 	err = json.NewDecoder(resp.Body).Decode(v)
 	return resp, err
 }

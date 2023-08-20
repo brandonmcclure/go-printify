@@ -15,20 +15,29 @@ const (
 )
 
 type Order struct {
-	Id                       *int               `json:"id,omitempty"`
-	AddressTo                *map[string]string `json:"address_to,omitempty"`
-	LineItems                []*LineItem        `json:"line_items"`
-	Metadata                 *OrderMetadata     `json:"metadata,omitempty"`
-	TotalPrice               *float32           `json:"total_price,omitempty"`
-	TotalShipping            *float32           `json:"total_shipping,omitempty"`
-	TotalTax                 *float32           `json:"total_tax,omitempty"`
-	Status                   *string            `json:"status,omitempty"`
-	ShippingMethod           int                `json:"shipping_method"`
-	SendShippingNotification *bool              `json:"send_shipping_notification"`
-	Shipments                []*Shipment        `json:"shipments,omitempty"`
-	CreatedAt                *time.Time         `json:"created_at,omitempty"`
-	SentToProductionAt       *time.Time         `json:"sent_to_production_at,omitempty"`
-	FulfilledAt              *time.Time         `json:"fulfilled_at,omitempty"`
+	Id                       *int           `json:"id,omitempty"`
+	LineItems                []*LineItem    `json:"line_items"`
+	AddressTo                *AddressTo     `json:"address_to,omitempty"`
+	Metadata                 *OrderMetadata `json:"metadata,omitempty"`
+	TotalPrice               *float32       `json:"total_price,omitempty"`
+	TotalShipping            *float32       `json:"total_shipping,omitempty"`
+	TotalTax                 *float32       `json:"total_tax,omitempty"`
+	Status                   *string        `json:"status,omitempty"`
+	ShippingMethod           int            `json:"shipping_method,omitempty"`
+	SendShippingNotification *bool          `json:"send_shipping_notification,omitempty"`
+	Shipments                []*Shipment    `json:"shipments,omitempty"`
+	CreatedAt                *time.Time     `json:"created_at,omitempty"`
+	SentToProductionAt       *time.Time     `json:"sent_to_production_at,omitempty"`
+	FulfilledAt              *time.Time     `json:"fulfilled_at,omitempty"`
+}
+
+type OrderSubmission struct {
+	ExternalID               string      `json:"external_id,omitempty"`
+	Label                    string      `json:"label,omitempty"`
+	LineItems                []*LineItem `json:"line_items"`
+	ShippingMethod           int         `json:"shipping_method,omitempty"`
+	SendShippingNotification *bool       `json:"send_shipping_notification,omitempty"`
+	AddressTo                *AddressTo  `json:"address_to"`
 }
 
 type LineItem struct {
@@ -47,6 +56,19 @@ type LineItem struct {
 	Metadata           *LineItemMetadata  `json:"metadata,omitempty"`
 	SentToProductionAt *time.Time         `json:"sent_to_production_at,omitempty"`
 	FulfilledAt        *time.Time         `json:"fulfilled_at,omitempty"`
+}
+
+type AddressTo struct {
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	Email     string `json:"email,omitempty"`
+	Phone     string `json:"phone,omitempty"`
+	Country   string `json:"country,omitempty"`
+	Region    string `json:"region,omitempty"`
+	Address1  string `json:"address1,omitempty"`
+	Address2  string `json:"address2,omitempty"`
+	City      string `json:"city,omitempty"`
+	Zip       string `json:"zip,omitempty"`
 }
 
 type OrderMetadata struct {
@@ -96,7 +118,7 @@ func (c *Client) ListShopOrders(shopId int, page, limit *int, statusFilter *stri
 		path = fmt.Sprintf("%s&status=%s", path, *statusFilter)
 	}
 
-	req, err := c.newRequest(http.MethodGet, path, nil)
+	req, err := c.newRequest(http.MethodGet, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +132,7 @@ Get order details by ID
 */
 func (c *Client) GetOrderDetails(shopId, orderId int) (*Order, error) {
 	path := fmt.Sprintf(getShopOrderPath, shopId, orderId)
-	req, err := c.newRequest(http.MethodGet, path, nil)
+	req, err := c.newRequest(http.MethodGet, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +144,9 @@ func (c *Client) GetOrderDetails(shopId, orderId int) (*Order, error) {
 /*
 Submit an order
 */
-func (c *Client) SubmitOrder(shopId int, order *Order) error {
+func (c *Client) SubmitOrder(shopId int, order *OrderSubmission) error {
 	path := fmt.Sprintf(getShopOrdersPath, shopId)
-	req, err := c.newRequest(http.MethodPost, path, order)
+	req, err := c.newRequest(http.MethodPost, path, "", order)
 	if err != nil {
 		return err
 	}
@@ -137,7 +159,7 @@ Send an existing order to production
 */
 func (c *Client) SendOrderToProduction(shopId, orderId int) (*Order, error) {
 	path := fmt.Sprintf(sendOrderToProductionPath, shopId, orderId)
-	req, err := c.newRequest(http.MethodPost, path, nil)
+	req, err := c.newRequest(http.MethodPost, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -149,9 +171,9 @@ func (c *Client) SendOrderToProduction(shopId, orderId int) (*Order, error) {
 /*
 Calculate the shipping cost of an order
 */
-func (c *Client) CalculateShippingCosts(shopId int, order *Order) (*ShippingCost, error) {
+func (c *Client) CalculateShippingCosts(shopId int, order *OrderSubmission) (*ShippingCost, error) {
 	path := fmt.Sprintf(getShippingCostsPath, shopId)
-	req, err := c.newRequest(http.MethodPost, path, order)
+	req, err := c.newRequest(http.MethodPost, path, "", order)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +187,7 @@ Cancel an order
 */
 func (c *Client) CancelOrder(shopId, orderId int) (*Order, error) {
 	path := fmt.Sprintf(cancelOrderPath, shopId, orderId)
-	req, err := c.newRequest(http.MethodPost, path, nil)
+	req, err := c.newRequest(http.MethodPost, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
