@@ -87,7 +87,8 @@ func (c *Client) GetUploads(page *int) (*UploadsResponse, error) {
 func (c *Client) AddUploads(uploadItems []Upload) (*Upload, error) {
 	for _, element := range uploadItems  {
 		AddUpload(element.FileName)
-	  }
+	}
+	return nill
 }
 func (c *Client) AddUpload(path string) (*Upload, error) {
 
