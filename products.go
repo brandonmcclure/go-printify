@@ -2,43 +2,74 @@ package go_printify
 
 import (
 	"fmt"
+	"io"
 	"net/http"
-	"time"
 )
 
 const (
 	productsPath       = "shops/%d/products.json"
-	productPath        = "shops/%d/products/%d.json"
-	publishProductPath = "shops/%d/products/%d/publish.json"
-	publishSuccessPath = "shops/%d/products/%d/publishing_succeeded.json"
-	publishFailedPath  = "shops/%d/products/%d/publishing_failed.json"
-	unpublishPath      = "shops/%d/products/%d/unpublish.json"
+	productPath        = "shops/%d/products/%s.json"
+	publishProductPath = "shops/%d/products/%s/publish.json"
+	publishSuccessPath = "shops/%d/products/%s/publishing_succeeded.json"
+	publishFailedPath  = "shops/%d/products/%s/publishing_failed.json"
+	unpublishPath      = "shops/%d/products/%s/unpublish.json"
 )
 
+type ProductsResponse struct {
+	CurrentPage  int       `json:"current_page"`
+	Data         []Product `json:"data"`
+	FirstPageUrl string    `json:"first_page_url"`
+	LastPageUrl  string    `json:"last_page_url"`
+	NextPageUrl  string    `json:"next_page_url"`
+	From         int       `json:"from"`
+	LastPage     int       `json:"last_page"`
+	Path         string    `json:"path"`
+	PerPage      int       `json:"per_page"`
+	PrevPageUrl  string    `json:"prev_page_url"`
+	To           int       `json:"to"`
+	Total        int       `json:"total"`
+}
+
 type Product struct {
-	Id                     *int                     `json:"id,omitempty"`
+	Id                     string                   `json:"id,omitempty"`
 	Title                  string                   `json:"title"`
 	Description            string                   `json:"description"`
 	Tags                   []string                 `json:"tags"`
 	Options                []map[string]interface{} `json:"options"`
 	Variants               []ProductVariant         `json:"variants"`
 	Images                 []ProductMockUpImage     `json:"images"`
-	CreatedAt              time.Time                `json:"created_at,omitempty"`
-	UpdatedAt              time.Time                `json:"updated_at,omitempty"`
+	CreatedAt              string                   `json:"created_at,omitempty"`
+	UpdatedAt              string                   `json:"updated_at,omitempty"`
 	Visible                bool                     `json:"visible"`
 	BlueprintId            int                      `json:"blueprint_id"`
 	PrintProviderId        int                      `json:"print_provider_id"`
 	UserId                 int                      `json:"user_id"`
 	ShopId                 int                      `json:"shop_id"`
-	PrintAreas             []*PrintArea             `json:"print_areas"`
-	PrintDetails           *PrintDetails            `json:"print_details"`
-	External               []*External              `json:"external"`
+	PrintAreas             []PrintArea              `json:"print_areas"`
+	PrintDetails           []PrintDetails           `json:"print_details"`
+	External               *External                `json:"external,omitempty"`
 	IsLocked               bool                     `json:"is_locked"`
-	SalesChannelProperties []string                 `json:"sales_channel_properties"`
+	SalesChannelProperties []string                 `json:"sales_channel_properties,omitempty"`
+}
+
+type ProductCreation struct {
+	Title           string                   `json:"title"`
+	Description     string                   `json:"description"`
+	Variants        []ProductCreationVariant `json:"variants"`
+	BlueprintId     int                      `json:"blueprint_id"`
+	PrintProviderId int                      `json:"print_provider_id"`
+	PrintAreas      []PrintArea              `json:"print_areas"`
+}
+
+type ProductCreationVariant struct {
+	Id        int     `json:"id"`
+	Price     float32 `json:"price"`
+	IsEnabled bool    `json:"is_enabled"`
+	IsDefault bool    `json:"is_default"`
 }
 
 type ProductVariant struct {
-	Id          *int    `json:"id"`
+	Id          int     `json:"id"`
 	Sku         string  `json:"sku"`
 	Price       float32 `json:"price"`
 	Cost        float32 `json:"cost"`
@@ -53,31 +84,32 @@ type ProductVariant struct {
 
 type ProductMockUpImage struct {
 	Src        string `json:"src"`
-	VariantIds int    `json:"variant_ids"`
+	VariantIds []int  `json:"variant_ids"`
 	Position   string `json:"position"`
 	IsDefault  bool   `json:"is_default"`
+	IsPublish  bool   `json:"is_selected_for_publishing"`
 }
 
-type ProducePlaceholder struct {
+type ProductPlaceholder struct {
 	Position string         `json:"position"`
 	Images   []ProductImage `json:"images"`
 }
 
 type ProductImage struct {
-	Id     int    `json:"id"`
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Height int    `json:"height"`
-	Width  int    `json:"width"`
-	X      int    `json:"x"`
-	Y      int    `json:"y"`
-	Scale  int    `json:"scale"`
-	Angle  int    `json:"angle"`
+	Id     string  `json:"id"`
+	Name   string  `json:"name"`
+	Type   string  `json:"type"`
+	Height int     `json:"height"`
+	Width  int     `json:"width"`
+	X      float32 `json:"x"`
+	Y      float32 `json:"y"`
+	Scale  float32 `json:"scale"`
+	Angle  int     `json:"angle"`
 }
 
 type PrintArea struct {
 	VariantIds   []int                `json:"variant_ids"`
-	Placeholders []ProducePlaceholder `json:"placeholders"`
+	Placeholders []ProductPlaceholder `json:"placeholders"`
 }
 
 type PrintDetails struct {
@@ -93,33 +125,57 @@ type PublishingProperties struct {
 }
 
 type External struct {
-	Id     int    `json:"id"`
-	Handle string `json:"handle"`
+	Id               string `json:"id"`
+	Handle           string `json:"handle"`
+	ShippingTemplate string `json:"shipping_template_id"`
 }
 
 /*
 Retrieve a list of products
 */
-func (c *Client) GetProducts(shopId int, page *int) ([]*Product, error) {
-	path := fmt.Sprintf(productsPath, shopId)
-	if page != nil {
-		path = fmt.Sprintf("%s?page=%d", path, &page)
+func (c *Client) GetAllProducts(shopId int) ([]Product, error) {
+
+	var allProducts []Product
+	page := 1
+	for {
+		productResults, err := c.GetProducts(shopId, &page)
+		if err != nil {
+			fmt.Println("Received error from getProducts")
+			return nil, err
+		}
+
+		allProducts = append(allProducts, productResults.Data...)
+
+		if productResults.NextPageUrl == "" {
+			break
+		}
+		page++
 	}
-	req, err := c.newRequest(http.MethodGet, path, nil)
+
+	return allProducts, nil
+}
+
+func (c *Client) GetProducts(shopId int, page *int) (*ProductsResponse, error) {
+	path := fmt.Sprintf(productsPath, shopId)
+	query := ""
+	if page != nil {
+		query = fmt.Sprintf("page=%d", *page)
+	}
+	req, err := c.newRequest(http.MethodGet, path, query, nil)
 	if err != nil {
 		return nil, err
 	}
-	products := make([]*Product, 0)
+	products := ProductsResponse{}
 	_, err = c.do(req, &products)
-	return products, err
+	return &products, err
 }
 
 /*
 Retrieve a product
 */
-func (c *Client) GetProduct(shopId, productId int) (*Product, error) {
+func (c *Client) GetProduct(shopId int, productId string) (*Product, error) {
 	path := fmt.Sprintf(productPath, shopId, productId)
-	req, err := c.newRequest(http.MethodGet, path, nil)
+	req, err := c.newRequest(http.MethodGet, path, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -131,35 +187,41 @@ func (c *Client) GetProduct(shopId, productId int) (*Product, error) {
 /*
 Create a new product
 */
-func (c *Client) CreateProduct(product Product) error {
-	req, err := c.newRequest(http.MethodPost, productsPath, product)
+func (c *Client) CreateProduct(shopId int, product ProductCreation) (*Product, error) {
+	path := fmt.Sprintf(productsPath, shopId)
+	req, err := c.newRequest(http.MethodPost, path, "", product)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	_, err = c.do(req, product)
-	return err
+	respProd := &Product{}
+	_, err = c.do(req, respProd)
+	return respProd, err
 }
 
 /*
 Update a product
 */
-func (c *Client) UpdateProduct(shopId int, product Product) (*Product, error) {
+func (c *Client) UpdateProduct(shopId int, product *Product) (*Product, error) {
 	path := fmt.Sprintf(productPath, shopId, product.Id)
-	req, err := c.newRequest(http.MethodPut, path, product)
+	req, err := c.newRequest(http.MethodPut, path, "", product)
 	if err != nil {
 		return nil, err
 	}
 	updatedProduct := &Product{}
-	_, err = c.do(req, updatedProduct)
+	resp, err := c.do(req, updatedProduct)
+	if err != nil {
+		bb, _ := io.ReadAll(resp.Body)
+		fmt.Println("RESP", string(bb))
+	}
 	return updatedProduct, err
 }
 
 /*
 Delete a product
 */
-func (c *Client) DeleteProduct(shopId int, productId int) error {
+func (c *Client) DeleteProduct(shopId int, productId string) error {
 	path := fmt.Sprintf(productPath, shopId, productId)
-	req, err := c.newRequest(http.MethodDelete, path, nil)
+	req, err := c.newRequest(http.MethodDelete, path, "", nil)
 	if err != nil {
 		return err
 	}
@@ -170,9 +232,9 @@ func (c *Client) DeleteProduct(shopId int, productId int) error {
 /*
 Publish a product
 */
-func (c *Client) PublishProduct(shopId, productId int, publishProperties PublishingProperties) error {
+func (c *Client) PublishProduct(shopId int, productId string, publishProperties PublishingProperties) error {
 	path := fmt.Sprintf(publishProductPath, shopId, productId)
-	req, err := c.newRequest(http.MethodPost, path, publishProperties)
+	req, err := c.newRequest(http.MethodPost, path, "", publishProperties)
 	if err != nil {
 		return err
 	}
@@ -183,9 +245,9 @@ func (c *Client) PublishProduct(shopId, productId int, publishProperties Publish
 /*
 Set product publish status to succeeded
 */
-func (c *Client) SetProductPublishSuccess(shopId, productId int, external External) error {
+func (c *Client) SetProductPublishSuccess(shopId int, productId string, external External) error {
 	path := fmt.Sprintf(publishSuccessPath, shopId, productId)
-	req, err := c.newRequest(http.MethodPost, path, external)
+	req, err := c.newRequest(http.MethodPost, path, "", external)
 	if err != nil {
 		return err
 	}
@@ -196,9 +258,9 @@ func (c *Client) SetProductPublishSuccess(shopId, productId int, external Extern
 /*
 Set product publish status to failed
 */
-func (c *Client) SetProductPublishFailre(shopId, productId int, reason string) error {
+func (c *Client) SetProductPublishFailre(shopId int, productId string, reason string) error {
 	path := fmt.Sprintf(publishFailedPath, shopId, productId)
-	req, err := c.newRequest(http.MethodPost, path, map[string]string{"reason": reason})
+	req, err := c.newRequest(http.MethodPost, path, "", map[string]string{"reason": reason})
 	if err != nil {
 		return err
 	}
@@ -209,9 +271,9 @@ func (c *Client) SetProductPublishFailre(shopId, productId int, reason string) e
 /*
 Notify that a product has been unpublished
 */
-func (c *Client) UnPublish(shopId, productId int) error {
+func (c *Client) UnPublish(shopId int, productId string) error {
 	path := fmt.Sprintf(unpublishPath, shopId, productId)
-	req, err := c.newRequest(http.MethodPost, path, nil)
+	req, err := c.newRequest(http.MethodPost, path, "", nil)
 	if err != nil {
 		return err
 	}

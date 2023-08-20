@@ -71,7 +71,7 @@ type priceTag struct {
 Retrieve a list of available blueprints
 */
 func (c *Client) ListBluePrints() ([]*Blueprint, error) {
-	req, err := c.newRequest(http.MethodGet, blueprintsPath, nil)
+	req, err := c.newRequest(http.MethodGet, blueprintsPath, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (c *Client) ListBluePrints() ([]*Blueprint, error) {
 Retrieve a specific blueprint
 */
 func (c *Client) GetBlueprint(Id int) (*Blueprint, error) {
-	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(blueprintPath, Id), nil)
+	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(blueprintPath, Id), "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (c *Client) GetBlueprint(Id int) (*Blueprint, error) {
 Retrieve a list of all print providers that fulfill orders for a specific blueprint
 */
 func (c *Client) GetPrintProviders(blueprintId int) ([]*PrintProvider, error) {
-	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(blueprintProvidersPath, blueprintId), nil)
+	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(blueprintProvidersPath, blueprintId), "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (c *Client) GetPrintProviders(blueprintId int) ([]*PrintProvider, error) {
 Retrieve a list of variants of a blueprint from a specific print provider
 */
 func (c *Client) GetVariants(blueprintId, providerId int) (*PrintProvider, error) {
-	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(BlueprintProviderVariantsPath, blueprintId, providerId), nil)
+	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(BlueprintProviderVariantsPath, blueprintId, providerId), "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (c *Client) GetVariants(blueprintId, providerId int) (*PrintProvider, error
 Retrieve shipping information
 */
 func (c *Client) GetShippingInformation(blueprintId, providerId int) (*ShippingProperties, error) {
-	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(BluePrintProviderShippingPath, blueprintId, providerId), nil)
+	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(BluePrintProviderShippingPath, blueprintId, providerId), "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (c *Client) GetShippingInformation(blueprintId, providerId int) (*ShippingP
 Retrieve a list of available print providers
 */
 func (c *Client) GetAvailablePrintProviders() ([]*PrintProvider, error) {
-	req, err := c.newRequest(http.MethodGet, PrintProvidersPath, nil)
+	req, err := c.newRequest(http.MethodGet, PrintProvidersPath, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -149,7 +149,7 @@ func (c *Client) GetAvailablePrintProviders() ([]*PrintProvider, error) {
 Retrieve a specific print provider and a list of associated blueprint offerings
 */
 func (c *Client) GetPrintProvider(Id int) (*PrintProvider, error) {
-	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(PrintProviderPath, Id), nil)
+	req, err := c.newRequest(http.MethodGet, fmt.Sprintf(PrintProviderPath, Id), "", nil)
 	if err != nil {
 		return nil, err
 	}
