@@ -133,5 +133,5 @@ func (c *Client) AddUploads(uploadItems []Upload) (*Upload, error) {
 	for _, element := range uploadItems  {
 		c.AddUpload(element.FileName)
 	}
-	return nil
+	return nil, err
 }
