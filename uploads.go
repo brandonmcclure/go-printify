@@ -130,7 +130,7 @@ func (c *Client) AddUpload(path string) (*Upload, error) {
 }
 
 func (c *Client) AddUploads(uploadItems []string) (*[]Upload, error) {
-	var outUploads = []Upload
+	var outUploads []Upload
 	for _, element := range uploadItems  {
 		outUploads.append(c.AddUpload(element))
 	}
