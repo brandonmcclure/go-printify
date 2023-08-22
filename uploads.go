@@ -130,7 +130,7 @@ func (c *Client) AddUpload(path string) (*Upload, error) {
 }
 
 func (c *Client) AddUploads(uploadItems []Upload) (*Upload, error) {
-	err = nil
+	err := nil
 	for _, element := range uploadItems  {
 		c.AddUpload(element.FileName)
 	}
