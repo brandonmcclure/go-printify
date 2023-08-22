@@ -129,8 +129,8 @@ func (c *Client) AddUpload(path string) (*Upload, error) {
 	return upload, err
 }
 
-func (c *Client) AddUploads(uploadItems []string) (*Uploads, error) {
-	outUploads = []
+func (c *Client) AddUploads(uploadItems []string) (*[]Upload, error) {
+	outUploads = []Upload
 	for _, element := range uploadItems  {
 		outUploads.append(c.AddUpload(element))
 	}
