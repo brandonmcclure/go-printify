@@ -84,12 +84,6 @@ func (c *Client) GetUploads(page *int) (*UploadsResponse, error) {
 	return uploads, err
 }
 
-func (c *Client) AddUploads(uploadItems []Upload) (*Upload, error) {
-	for _, element := range uploadItems  {
-		AddUpload(element.FileName)
-	}
-	return nill
-}
 func (c *Client) AddUpload(path string) (*Upload, error) {
 
 	// Get filename
@@ -133,4 +127,11 @@ func (c *Client) AddUpload(path string) (*Upload, error) {
 	upload := &Upload{}
 	_, err = c.do(req, upload)
 	return upload, err
+}
+
+func (c *Client) AddUploads(uploadItems []Upload) (*Upload, error) {
+	for _, element := range uploadItems  {
+		AddUpload(element.FileName)
+	}
+	return nill
 }
